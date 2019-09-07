@@ -4,16 +4,19 @@
 ;; refer to the companion file LICENSING or to the online documentation
 ;; at https://www.gnu.org/licenses/gpl-3.0.txt for further information.
 
+org 0x7c00
 jmp main
 
+; ===================================================
+; Static variables
+; ===================================================
 start: db "Enter a number", 0xd, 0xa, 0x0
 prime: db "Prime", 0xd, 0xa, 0x0
 not_prime: db "Not prime", 0xd, 0xa, 0x0
 new_line: db 0xd, 0xa, 0x0
+; ===================================================
 
 main:
-    org 0x7c00
-
     mov bx, start
     call printString    ; Prints intro string
 
@@ -36,17 +39,45 @@ print_not_prime:        ; prints "not prime"
     jmp end
 
 end:
-    jmp $
+    jmp main
 
 ; ======================================================
 ; Returns boolean value in DX indicating if BX is prime
 ; ======================================================
 isPrime:
+    push ax
     push bx
+    push cx
 
+    mov cx, 0x2 ; cx is the counter that will run from 2 to N - 1
+    ; If I were trying to be more efficient I'd make it so that it would run until sqrt(n)
 
+primeLoop:
+    cmp bx, cx      ; if counter == n
+    je resultPrime  ; return true
 
+    mov dx, 0x0     ; Clears divident (was causing error without this line)
+    mov ax, bx      ; Moves N to ax so it can be divided
+    div cx          ; Divides it by the counter value
+
+    cmp dx, 0x0         ; If remainder == 0
+    je resultNotPrime   ; Return false
+
+    add cx, 0x1     ; Increments counter
+    jmp primeLoop
+
+resultNotPrime:
+    mov dx, 0x0     ; sets dx as 0 (false)
+    jmp endPrimeRoutine
+
+resultPrime:
+    mov dx, 0x1     ; sets dx as 1 (true)
+    jmp endPrimeRoutine
+
+endPrimeRoutine:
+    pop cx
     pop bx
+    pop ax
     ret
 
 ; ======================================================
